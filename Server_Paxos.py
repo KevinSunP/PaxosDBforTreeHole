@@ -1,12 +1,12 @@
 '''
 Sunjq:
 问题:
-Instruction里面需要加入时间戳,精度需要确认对齐
 需要一些接口完成列表和消息传递
 需不需要停止这个节点的功能?节点在那些地方需要挂起?
 ''' 
 
 import json
+import datetime
 from datatype import input_instruction, passed_instruction
 from datatype import passed2json
 from datatype import json2passed
@@ -51,7 +51,7 @@ class Proposer:
     开始下一个轮次
 
     Note:
-    提案编号为三位优先级+Ins时间戳
+    提案编号为3位优先级+20(8+6+6)位Ins时间戳
     '''
 
     def __init__(self):
@@ -111,10 +111,13 @@ class Proposer:
     '''
     helper func
     '''
-    def Gen_PropNo(self,timestamp: str): #将整数priority和字符串timestamp合并
-        priority_str = '%03d' % self.priority
-        priority_str = priority_str + timestamp
-        self.propNo = priority_str
+    def Gen_PropNo(self): #将整数priority和字符串timestamp合并
+        strPriority = '%03d' % self.priority
+        strTime = str(datetime.datetime.now())
+        timeStamp = strTime[0:4]+strTime[5:7]+strTime[8:10]\
+            +strTime[11:13]+strTime[14:16]+strTime[17:19]+strTime[20:26]
+        strPriority += timeStamp
+        self.propNo = strPriority
     
     def Pass_Instruction(self,passIns: passed_instruction):  #发送格式消息
         pass
