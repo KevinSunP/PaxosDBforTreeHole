@@ -69,8 +69,7 @@ class Proposer:
         self.priority = 0
         self.rejected = False
         self.propNo = ''
-        self.instruction = input_instruction
-        self.propAccepted = False
+        self.instruction = input_instruction()
 
     '''
     main func
@@ -88,7 +87,7 @@ class Proposer:
                 self.priority = 0
             self.Prepare()
             self.Listen_Response()
-            if self.propAccepted:
+            if not self.rejected:
                 self.Propose()
             while roundFlag == 0:  #等待当前轮次结束
                 pass
@@ -97,7 +96,7 @@ class Proposer:
         global roundNo
         #准备prepare请求的内容
         self.Gen_PropNo()
-        prepare_request = passed_instruction
+        prepare_request = passed_instruction()
         prepare_request.type = TPROPOSAL_ACCEPTOR_1
         prepare_request.source = NODENO
         prepare_request.round = roundNo
@@ -113,7 +112,7 @@ class Proposer:
     def Propose(self):
         global roundNo
         #准备propose请求的内容
-        propose_request = passed_instruction
+        propose_request = passed_instruction()
         propose_request.type = TPROPOSAL_ACCEPTOR_2
         propose_request.source = NODENO
         propose_request.round = roundNo
@@ -134,9 +133,9 @@ class Proposer:
         '''
         acceptNum = 0
         if acceptNum >= NMAJORITY:
-            self.propAccepted = True
+            self.rejected = False
         else: 
-            self.propAccepted = False
+            self.rejected = True
 
     
     '''
@@ -152,13 +151,15 @@ class Proposer:
     
     def Pass_Instruction(self,passIns: passed_instruction):  #发送格式消息
         message = passed2json(passIns)
+        sender.produce(json.dumps(message))
         pass
 
     def Get_Next_Ins(self):  
         '''
         从Ins列表中取下一个指令
+        这里,proposer可能会挂起:当消息队列为空,等待client的消息
         '''
-        pass
+        
 
     def Get_Next_Response(self):  #从Response列表中取下一个消息
         pass
@@ -173,15 +174,15 @@ class Learner:
 
 
 def Start_Proposer():  #在节点的一个线程中执行
-    proposer = Proposer
+    proposer = Proposer()
     proposer.Proposer_Main()
 
 def Start_Acceptor():  #在节点的一个线程中执行
-    acceptor = Acceptor
+    acceptor = Acceptor()
     acceptor.Acceptor_Main()
 
 def Start_Learner():  #在节点的一个线程中执行
-    learner = Learner
+    learner = Learner()
     learner.Learner_Main()
     
 def Run_Threads():
@@ -193,5 +194,12 @@ def Run_Threads():
     ta.start()
     tl.start()
 
-if __name__ == '__main__':
+def Node_Initialize():
+    pass
+
+def main():
+    Node_Initialize()
     Run_Threads()
+
+if __name__ == '__main__':
+    main()
